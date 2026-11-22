@@ -5,6 +5,7 @@ import { type ReactNode, useRef, useState } from 'react';
 import { store, update } from '@/actions/App/Http/Controllers/GuildController';
 import { EmojiPickerButton } from '@/components/emoji-picker';
 import { GuildIcon } from '@/components/guild-icon';
+import { GuildIconPreview } from '@/components/guild-icon-preview';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +37,17 @@ export function GuildDialog({
     const [emoji, setEmoji] = useState(guild?.emoji ?? '💻');
     const [removeIcon, setRemoveIcon] = useState(false);
     const [name, setName] = useState(guild?.name ?? handle ?? '');
+    const [preview, setPreview] = useState<string | null>(null);
     const form = useRef<FormComponentRef>(null);
+
+    function showPreview(file: File | null) {
+        setPreview((current) => {
+            if (current) {
+                URL.revokeObjectURL(current);
+            }
+            return file ? URL.createObjectURL(file) : null;
+        });
+    }
     const nameHandle = name.replace(/[^\p{L}\p{M}\p{N}_]+/gu, '').toLowerCase();
     const hashtag = guild?.handle ?? handle ?? nameHandle;
 
@@ -48,6 +59,7 @@ export function GuildDialog({
                 onCloseAutoFocus={() => {
                     setEmoji(guild?.emoji ?? '💻');
                     setRemoveIcon(false);
+                    showPreview(null);
                     setName(guild?.name ?? handle ?? '');
                 }}
             >
@@ -215,9 +227,17 @@ export function GuildDialog({
                                         name="images[]"
                                         type="file"
                                         accept="image/jpeg,image/png,image/webp"
+                                        onChange={(event) =>
+                                            showPreview(
+                                                event.target.files?.[0] ?? null,
+                                            )
+                                        }
                                         className={`${fieldClass} file:mr-3 file:text-sm`}
                                         aria-describedby="guild-icon-help guild-icon-error"
                                     />
+                                    {preview && (
+                                        <GuildIconPreview src={preview} />
+                                    )}
                                     <p
                                         id="guild-icon-help"
                                         className="text-xs text-muted-foreground"
