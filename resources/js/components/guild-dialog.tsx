@@ -1,7 +1,7 @@
 import type { FormComponentRef } from '@inertiajs/core';
 import { Form, router } from '@inertiajs/react';
 import { LoaderCircle, Plus, Save } from 'lucide-react';
-import { type ReactNode, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { store, update } from '@/actions/App/Http/Controllers/GuildController';
 import { EmojiPickerButton } from '@/components/emoji-picker';
 import { GuildIcon } from '@/components/guild-icon';
@@ -40,14 +40,24 @@ export function GuildDialog({
     const [preview, setPreview] = useState<string | null>(null);
     const form = useRef<FormComponentRef>(null);
 
+    const previewUrl = useRef<string | null>(null);
+
     function showPreview(file: File | null) {
-        setPreview((current) => {
-            if (current) {
-                URL.revokeObjectURL(current);
-            }
-            return file ? URL.createObjectURL(file) : null;
-        });
+        if (previewUrl.current) {
+            URL.revokeObjectURL(previewUrl.current);
+        }
+        previewUrl.current = file ? URL.createObjectURL(file) : null;
+        setPreview(previewUrl.current);
     }
+
+    useEffect(
+        () => () => {
+            if (previewUrl.current) {
+                URL.revokeObjectURL(previewUrl.current);
+            }
+        },
+        [],
+    );
     const nameHandle = name.replace(/[^\p{L}\p{M}\p{N}_]+/gu, '').toLowerCase();
     const hashtag = guild?.handle ?? handle ?? nameHandle;
 
